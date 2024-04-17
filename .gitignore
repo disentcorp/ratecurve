@@ -1,0 +1,14 @@
+.vscode/
+pages/build/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+build/*
+dist/*
+NotExist
+NotExist.lockfile
+!.coveragerc
+.coverage
+.coverage.*

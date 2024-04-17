@@ -1,0 +1,5 @@
+[run]
+source = ratecurve
+command_line = -m tests.test_suite
+; branch = false
+
