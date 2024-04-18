@@ -186,7 +186,6 @@ class Curve:
             
         return to_y, from_y
     
-
     def isdatelike(self, x):
         '''
         Tests if input is date-like (is or can be converted to dateroll type).
@@ -229,7 +228,7 @@ class Curve:
         
     def to_dateroll_date(self, x):
         '''
-        Converts input to dateroll.date type relative to self.base date.
+        Converts input to dateroll.Date type relative to self.base date.
         '''
         if isinstance(x, Duration):
             return self.base + x
@@ -238,7 +237,6 @@ class Curve:
         else:
             raise TypeError
         
-
     def  make_date_a_number(self, date, dc, cal):
         '''
         Converts date or list of dates to a number(s) for interpolation. Number is 
