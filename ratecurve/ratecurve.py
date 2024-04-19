@@ -292,7 +292,7 @@ class Curve:
         a_date = self.to_dateroll_date(self.to_dateroll_date_like(a))
         b_date = self.to_dateroll_date(self.to_dateroll_date_like(b))
         # Convert from date to a number for the interpolated function call
-        _a = self.make_date_a_number(a_date, self.dc, self.cal) #should handle cases when tenor is passed for b/a etc.
+        _a = self.make_date_a_number(a_date, self.dc, self.cal)
         _b = self.make_date_a_number(b_date, self.dc, self.cal)
         # Interpolated values
         _ya = self.f(_a)
