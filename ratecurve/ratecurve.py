@@ -9,56 +9,13 @@ from dateroll import ddh, Date, Duration
 # Standin for upcoming dateroll features 
 Duration.just_bds = lambda self, *args,**kwargs: self.just_days
 Duration.yf = lambda self, *args,**kwargs: self.just_days/365
+
+from ratecurve.equations import *
+
+
+
 # Acceptable date-like types
 DATE_LIKE_TYPES = (Date,Duration,datetime.datetime,datetime.date,np.datetime64,dateutil.relativedelta.relativedelta,datetime.timedelta,np.timedelta64)
-# Shorthand for e, ln
-ln = np.log
-e = np.e
-
-def disc_factor(r, t, method):
-    '''
-    The disc_factor is a multiple used to get the present value of a future value. 
-    (PV = FV*DiscountFactor) Computed with a given rate, method and time.
-    '''
-    if method == 'EXP':
-        cf = e**(r*t)
-    elif method == 'YLD':
-        cf = (1+r)**t
-    elif method == 'LIN':
-        cf = 1+r*t
-    else:
-        raise ValueError(f'Method {method} unknown')
-    df = 1/cf
-    return df
-
-def cap_factor(r, t, method):
-    '''
-    The reciprocal of disc_factor; used to multiply current value to get its
-    future value (FV = PV*CapFactor)
-    '''
-    return 1/disc_factor(r, t, method)
-
-def convert_disc_factor_to_rate(df, t, method):
-    '''
-    Converts disc_factor to rate for given methods and time for how disc_factor was calculated.
-    '''
-    cf = 1/df
-    if method == 'EXP':
-        return ln(cf)/t
-    elif method == 'YLD':
-        return (cf**(1/t)) - 1
-    elif method == 'LIN':
-        return (cf-1)/t
-    else:
-        raise ValueError(f'Method {method} unknown')
-    
-def convert_cap_factor_to_rate(cf, t, method):
-    '''
-    Converts cap_factor to rate.
-    '''
-    df = 1/cf
-    return convert_disc_factor_to_rate(df, t, method)
-
 
 # class InterpResult:
 #   TODO    
