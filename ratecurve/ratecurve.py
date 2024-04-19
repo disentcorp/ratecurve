@@ -1,8 +1,5 @@
-import numpy as np
 import pandas as pd
 from scipy import interpolate
-import datetime 
-import dateutil
 
 from dateroll import ddh, Date, Duration
 
@@ -11,11 +8,9 @@ Duration.just_bds = lambda self, *args,**kwargs: self.just_days
 Duration.yf = lambda self, *args,**kwargs: self.just_days/365
 
 from ratecurve.equations import *
+from ratecurve.utils import *
 
-
-
-# Acceptable date-like types
-DATE_LIKE_TYPES = (Date,Duration,datetime.datetime,datetime.date,np.datetime64,dateutil.relativedelta.relativedelta,datetime.timedelta,np.timedelta64)
+INTERPOLATION_ROOT_DATE = '1/1/2000'
 
 # class InterpResult:
 #   TODO    
@@ -23,7 +18,6 @@ DATE_LIKE_TYPES = (Date,Duration,datetime.datetime,datetime.date,np.datetime64,d
 #     '''
 #     def __init__(self,curve,a,b):
 #         ...
-
 
 class Curve:
     '''
@@ -56,8 +50,8 @@ class Curve:
         self.cal = cal 
         self.interp_method = interp_method
         # Transformations for input and outputs to interpolation
-        self.to_x = lambda x: self.make_date_a_number(x,dc,cal)
-        self.to_y, self.from_y = self.get_y_transformers(interp_on,method,cal,dc)        
+        self.to_x = lambda x: self.make_date_a_number(x)
+        self.to_y, self.from_y = self.get_y_transformers(interp_on, method, cal, dc)        
 
         # Data processing and validation will parse and store dates and rates
         if isinstance(d, dict):
@@ -104,7 +98,46 @@ class Curve:
             except:
                 raise ValueError('Invalid data. Data must be of form {[date-like object]:float}')
         self.raw_data = data
-        return x, y   
+        return x, y
+    
+    def to_date(self, datelike):
+        '''
+        Converts tenors to dates relative to Curve.base date.
+        ''' 
+        return to_dateroll_date(datelike, self.base)   
+
+    def _dt(self, date1, date2):
+        '''
+        Calculates year fraction between 2 dates.
+        '''
+        return delta_t(date1, date2, self.dc, self.cal)   
+    
+    def _t(self, date):
+        '''
+        Coverts date to year fraction.
+        '''
+        return self._dt(self.base, date)   
+    
+    def cap_factor(self, date1, date2):
+        '''
+        Interpolated cap factor of curve between two dates. See docs for 
+        ratecurve.equations.cap_factor for more details.
+        '''
+        # Get interpolated cap factor
+        cf01 = self.interpolate_cap_factor(date1)
+        cf02 = self.interpolate_cap_factor(date2)
+
+        # Compute forward cap factor
+        cf12 = cf02/cf01
+        return cf12
+    
+
+    def disc_factor(self, date1, date2):
+        '''
+        Interpolated discount factor of curve between two dates. See docs for 
+        ratecurve.equations.disc_factor for more details.
+        '''
+        return 1/self.cap_factor(date1, date2)
     
     def get_y_transformers(self, interp_on, method, cal, dc):
         '''
@@ -112,10 +145,9 @@ class Curve:
             1. Convert raw rates into interpolated form 
             2. Convert interpolated form to raw_rates
         '''
-        def to_y(date, rate, x):
+        def to_y(t, rate):
             # From rate to interpolated form
             r  = rate
-            t = (date - self.base).yf(cal, dc)
             if interp_on == 'r':
                 return r
             elif interp_on in ('rt','r*t'):
@@ -126,97 +158,33 @@ class Curve:
             else:
                 raise ValueError(f'Unknown interp_on {interp_on}')
             
-        def from_y(date, x, y):
-            # From interpolated form to rate
-            t = (date-self.base).yf(cal, dc)
+        def from_y(t, y):
+            # From interpolated form to cap factor
             if interp_on == 'r':  
-                return y
+                return cap_factor(y, t, self.method)
             elif interp_on in ('rt', 'r*t'):
-                return y/t
+                return cap_factor(y/t, t, self.method)
             elif interp_on == 'ln(df)':
                 df = e**y
-                if df == 1:
-                    # Converting discount_factor to rate can result in division by 0 if t=0 (df=1 at t=0
-                    return self.rates[0]
-                else: 
-                    return convert_disc_factor_to_rate(df,t,method)
-            
+                return 1/df
+            else:
+                raise ValueError(f'Unknown interp_on {interp_on}')
+                        
         return to_y, from_y
     
-    def isdatelike(self, x):
-        '''
-        Tests if input is date-like (is or can be converted to dateroll type).
-        '''
-        if isinstance(x, DATE_LIKE_TYPES):
-            return True 
-        else:
-            if isinstance(x, str):
-                try:
-                    ddh(x)
-                    return True
-                except:
-                    return False
-        return False
     
-    def to_dateroll_date_like(self, x):
-        '''
-        Converts input to dateroll type compatible with Curve class (Date, Duration).
-        '''
-        if isinstance(x, str):
-            # Try to convert string type
-            try:
-                date = ddh(x) 
-                if isinstance(ddh(x), (Date,Duration)):
-                    return date
-                else:
-                    raise 
-            except:
-                raise TypeError('Input must be convertible to dateroll.Date or dateroll.Tenor.')
-        elif isinstance(x, np.datetime64):
-            # Numpy date classes are not directly convertible to dateroll types yet.
-            # Can use pandas to convert to datetime which can then be converted to dateroll.
-            return ddh(pd.Timestamp(x))
-        elif isinstance(x, np.timedelta64):
-            return ddh(pd.Timedelta(x))
-        elif self.isdatelike(x):
-            return ddh(x)
-        else:
-            raise TypeError('Unrecognized date-type for conversion')
-        
-    def to_dateroll_date(self, x):
-        '''
-        Converts input to dateroll.Date type relative to self.base date.
-        '''
-        if isinstance(x, Duration):
-            return self.base + x
-        elif isinstance(x, Date):
-            return x
-        else:
-            raise TypeError('Can only convert dates and durations.')
-        
-    def make_date_a_number(self, date, dc, cal):
+    def make_date_a_number(self, date):
         '''
         Converts date or list of dates to a number(s) for interpolation. Number is 
-        days since 1/1/2000.
+        days since root date (originally set to 1/1/2000).
         '''
-        if isinstance(date, Date):
-            if dc.lower().startswith('bd'):
-                return (date - '1/1/2000').just_bds(cal=cal, dc=dc) 
-            else:
-                return (date - '1/1/2000').just_days
-        else:  
-            # Handles list-like inputs
-            try:
-                len(date)
-                return [self.make_date_a_number(x, dc, cal) for x in date]
-            except:
-                raise TypeError('Must be Date list-like of Date types to convert to number')
-        
-    def make_number_a_date(self, number, cal):
+        return from_date_to_number(date, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
+
+    def make_number_a_date(self, number):
         '''
         Convers interpolation number to date.
         '''
-        return ddh('1/1/2000') + number
+        return from_number_to_date(number, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
 
     def fit(self):
         '''
@@ -224,10 +192,16 @@ class Curve:
         '''
         dates = self.dates
         rates = self.rates
-
         x = [self.to_x(date) for date in dates]
-        y = [self.to_y(dates[i], rates[i], x[i],) for i in range(len(self.rates))] #self.to_y(self.dates,x,rates)     
-        self.f = interpolate.interp1d(x, y, kind=self.interp_method)
+        y = [self.to_y(self._t(dates[i]), rates[i]) for i in range(len(self.rates))]
+        self.interpolator_unadjusted = interpolate.interp1d(x, y, kind=self.interp_method)
+
+    def interpolate_cap_factor(self, date):
+        validated_t = self._t(date)
+        x = self.to_x(date)
+        unadjusted_interpolation = self.interpolator_unadjusted(x)
+        cf = self.from_y(validated_t, unadjusted_interpolation)
+        return cf
 
     def __call__(self, *args):
         '''
@@ -235,64 +209,29 @@ class Curve:
         curve(a,b) returns forward rate between a and b, where a is convertible to a date before b.
         '''
         if len(args)==1:
-            return self.spot(args[0], returns='df')
+            return self.disc_factor(self.base, args[0])
         elif len(args)==2:
             return self.fwd(args[0], args[1])
         else:
             raise TypeError('Curve instance call takes 1 or 2 positional arguments')
  
-    def fwd(self, a, b, returns='rate'):
+    def fwd(self, date1, date2):
         '''
-        Computes forward rate between date a and date b. Can return either rate or discount_factor.
-        '''
-        # Convert a and b to dates if not already
-        a_date = self.to_dateroll_date(self.to_dateroll_date_like(a))
-        b_date = self.to_dateroll_date(self.to_dateroll_date_like(b))
-        # Convert from date to a number for the interpolated function call
-        _a = self.make_date_a_number(a_date, self.dc, self.cal)
-        _b = self.make_date_a_number(b_date, self.dc, self.cal)
-        # Interpolated values
-        _ya = self.f(_a)
-        _yb = self.f(_b)
-        # Spot rates
-        spot_a = self.from_y(a_date, _a, _ya)
-        spot_b = self.from_y(b_date, _b, _yb)
-        #possible times
-        t_a = (a_date - self.base).yf(self.cal, self.dc)
-        t_b = (b_date - self.base).yf(self.cal, self.dc)
-        t_between = (b_date - a_date).yf(self.cal, self.dc)
-        # Convert from spot rates to capfactor for forward cap. chain so far is spot->capf ->fwdcapfactor->rate/discountfactor
-        cf_a = cap_factor(spot_a, t_a, self.method) # a spot rate
-        cf_b = cap_factor(spot_b, t_b, self.method) # b spot rate
-        # Forward cap factor calculation
-        fwd_cap = cf_b/cf_a
-        # Convert fwd_cap back to fwd_rate
-        fwd_rate = convert_cap_factor_to_rate(fwd_cap, t_between, self.method)
-        
-        # Return either rate or discount factor
-        if returns in ('rate', 'r'):
-            return fwd_rate
-        elif returns in('df', 'discount_factor'):
-            return disc_factor(fwd_rate, t_a, self.method)
-        else:
-            raise TypeError('Returns must be either "rate" or "df".')
+        Computes forward rate between date a and date b.
+        '''  
+        cf12 = self.cap_factor(date1, date2)
+        dt = self._dt(date1, date2)
+        r12 =  convert_cap_factor_to_rate(cf12, dt, self.method)
+        return r12
 
-    def spot(self, b, returns='rate') :
+    def spot(self, date) :
         '''
         Computes spot rate at date a. Can return as either rate or discount factor.
         '''
         # Convert to dates
-        b_date = self.to_dateroll_date(self.to_dateroll_date_like(b))        
-        a_date = self.base  # For spot rates, our a is always our base date
+        date0 = self.base
+        date1 = self.to_date(date)
         # Compute forward rate between b and self.base
-        rate = self.fwd(a_date, b_date)
-        # Time
-        t = (b_date - self.base).yf(self.cal, self.dc)
-        
-        if returns in ('rate', 'r'):
-            return rate
-        elif returns in ('df','discount_factor'):
-            return disc_factor(rate, t, self.method)
-        else:
-            raise TypeError('Returns must be either "rate" or "df".')
+        rate = self.fwd(date0, date1)        
+        return rate
 

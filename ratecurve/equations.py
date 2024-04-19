@@ -26,23 +26,27 @@ def disc_factor(r, t, method):
     '''
     return 1/cap_factor(r, t, method)
 
+def convert_cap_factor_to_rate(cf, t, method):
+    '''
+    Converts cap_factor to rate.
+    '''
+    if method == 'EXP':
+        r = ln(cf)/t
+    elif method == 'YLD':
+        r =  (cf**(1/t)) - 1
+    elif method == 'LIN':
+        r = (cf-1)/t
+    else:
+        raise ValueError(f'Method {method} unknown')
+    return r 
+
 def convert_disc_factor_to_rate(df, t, method):
     '''
     Converts disc_factor to rate for given methods and time for how disc_factor was calculated.
     '''
     cf = 1/df
-    if method == 'EXP':
-        return ln(cf)/t
-    elif method == 'YLD':
-        return (cf**(1/t)) - 1
-    elif method == 'LIN':
-        return (cf-1)/t
-    else:
-        raise ValueError(f'Method {method} unknown')
+    return convert_disc_factor_to_rate(cf, t, method)
+
+
     
-def convert_cap_factor_to_rate(cf, t, method):
-    '''
-    Converts cap_factor to rate.
-    '''
-    df = 1/cf
-    return convert_disc_factor_to_rate(df, t, method)
+    
