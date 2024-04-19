@@ -32,11 +32,10 @@ def to_dateroll_date(x, base=None):
             base_date = ddh(base)
             assert isinstance(base_date, Date)
         except:
-            TypeError("Base date must be convertable to dateroll.Date")
+            raise TypeError("Base date must be convertable to dateroll.Date")
 
     # If string, try to convert and recurse on converted value
     if isinstance(x, str):
-        
         try:
             date_like = ddh(x) 
             return to_dateroll_date(date_like, base)
@@ -52,9 +51,7 @@ def to_dateroll_date(x, base=None):
                 return base_date + dateroll_obj
             except:
                 # Will fail if no base given
-                raise ValueError("Cannot convert tenor without a base date.")
-        else:
-            raise TypeError("Unconvertible date-type.")        
+                raise ValueError("Cannot convert tenor without a base date.")     
     else:
         raise TypeError('Unrecognized date-type for conversion')
     
@@ -65,13 +62,12 @@ def from_date_to_number(date, root, dc, cal):
     '''
     validated_root = to_dateroll_date(root)
     validated_date = to_dateroll_date(date,validated_root)
-    if isinstance(date, Date):
-        if dc.lower().startswith('bd'):
-            return (validated_date - validated_root).just_bds(cal=cal, dc=dc) 
-        else:
-            return (validated_date - validated_root).just_days
+
+    if dc.lower().startswith('bd'):
+        return (validated_date - validated_root).just_bds(cal=cal, dc=dc) 
     else:
-        raise TypeError("Can only convert date-like types to number.")
+        return (validated_date - validated_root).just_days
+
 
 def from_number_to_date(number, root, dc, cal):
     '''

@@ -8,7 +8,7 @@ from ratecurve.ratecurve import disc_factor,ln,e,convert_cap_factor_to_rate,cap_
 
 Duration.just_bds = lambda self, *args,**kwargs: self.just_days
 
-class TestCurve(unittest.TestCase):
+class TestEquations(unittest.TestCase):
     @classmethod
     def setUpClass(cls): ...
 

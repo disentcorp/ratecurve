@@ -51,7 +51,7 @@ class Curve:
         self.interp_method = interp_method
         # Transformations for input and outputs to interpolation
         self.to_x = lambda x: self.make_date_a_number(x)
-        self.to_y, self.from_y = self.get_y_transformers(interp_on, method, cal, dc)        
+        self.to_y, self.from_y = self.get_y_transformers(interp_on, method)        
 
         # Data processing and validation will parse and store dates and rates
         if isinstance(d, dict):
@@ -64,10 +64,10 @@ class Curve:
             if d.shape[0] > 1 and d.shape[1] > 1:
                 raise TypeError('Data must be dictionary, series, or DataFrame with shape (<=1,<=1).')
             else:
-                if self.isdatelike(d.columns[0]):
+                if isdatelike(d.columns[0]):
                     data = d.T.iloc[:,0].to_dict()
                     self.dates, self.rates = self.validate_data(data)
-                elif self.isdatelike(d.index[0]):
+                elif isdatelike(d.index[0]):
                     data = d.iloc[:,0].to_dict()
                     self.dates, self.rates = self.validate_data(data)
                 else:
@@ -90,7 +90,7 @@ class Curve:
             val = i[1]
             try:
                 # Convert key to date
-                key_as_date = self.to_dateroll_date(self.to_dateroll_date_like(key))
+                key_as_date = self.to_date(key)
                 if not isinstance(val,float):
                     raise
                 x.append(key_as_date)
@@ -139,7 +139,7 @@ class Curve:
         '''
         return 1/self.cap_factor(date1, date2)
     
-    def get_y_transformers(self, interp_on, method, cal, dc):
+    def get_y_transformers(self, interp_on, method):
         '''
         Returns 2 functions: 
             1. Convert raw rates into interpolated form 
