@@ -90,7 +90,7 @@ class Curve:
         interp_method
             Kind of interpolation performed on data. See scipy.interp1d documentation for details.
         base
-            Date at head of curve. Default is today.
+            Date at head of curve. Default is current date.
         '''
         self.base = ddh(base)  # Base is always in date form
         self.dc = dc 
@@ -141,11 +141,11 @@ class Curve:
                 # Convert key to date
                 key_as_date = self.to_dateroll_date(self.to_dateroll_date_like(key))
                 if not isinstance(val,float):
-                    raise ValueError("Rates must be floats.")
+                    raise
                 x.append(key_as_date)
                 y.append(val)
             except:
-                raise ValueError('Invalid data. Data must be of form {[date-like object]:rate}')
+                raise ValueError('Invalid data. Data must be of form {[date-like object]:float}')
         self.raw_data = data
         return x, y   
     
@@ -179,7 +179,7 @@ class Curve:
             elif interp_on == 'ln(df)':
                 df = e**y
                 if df == 1:
-                    # Converting discount_factor to rate can result in division by 0 if t = 0
+                    # Converting discount_factor to rate can result in division by 0 if t=0 (df=1 at t=0
                     return self.rates[0]
                 else: 
                     return convert_disc_factor_to_rate(df,t,method)
@@ -212,9 +212,9 @@ class Curve:
                 if isinstance(ddh(x), (Date,Duration)):
                     return date
                 else:
-                    raise TypeError('Must be convertible to dateroll. Date or dateroll.Tenor.')
-            except Exception as e:
-                raise e
+                    raise 
+            except:
+                raise TypeError('Input must be convertible to dateroll.Date or dateroll.Tenor.')
         elif isinstance(x, np.datetime64):
             # Numpy date classes are not directly convertible to dateroll types yet.
             # Can use pandas to convert to datetime which can then be converted to dateroll.
@@ -224,7 +224,7 @@ class Curve:
         elif self.isdatelike(x):
             return ddh(x)
         else:
-            raise TypeError
+            raise TypeError('Unrecognized date-type for conversion')
         
     def to_dateroll_date(self, x):
         '''
@@ -235,9 +235,9 @@ class Curve:
         elif isinstance(x, Date):
             return x
         else:
-            raise TypeError
+            raise TypeError('Can only convert dates and durations.')
         
-    def  make_date_a_number(self, date, dc, cal):
+    def make_date_a_number(self, date, dc, cal):
         '''
         Converts date or list of dates to a number(s) for interpolation. Number is 
         days since 1/1/2000.
@@ -318,7 +318,7 @@ class Curve:
         elif returns in('df', 'discount_factor'):
             return disc_factor(fwd_rate, t_a, self.method)
         else:
-            raise TypeError('Return must be of type: ["rate", "df"]')
+            raise TypeError('Returns must be either "rate" or "df".')
 
     def spot(self, b, returns='rate') :
         '''
@@ -337,5 +337,5 @@ class Curve:
         elif returns in ('df','discount_factor'):
             return disc_factor(rate, t, self.method)
         else:
-            raise TypeError('Return must be of type: ["rate", "df"]')
+            raise TypeError('Returns must be either "rate" or "df".')
 
