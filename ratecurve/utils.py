@@ -1,7 +1,7 @@
 import datetime
-import dateutil
 
-from dateroll import ddh, Date, Duration
+import dateutil
+from dateroll import Date, Duration, ddh
 
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days
 Duration.yf = lambda self, *args, **kwargs: self.just_days / 365
