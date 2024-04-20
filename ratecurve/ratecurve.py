@@ -2,9 +2,7 @@ import pandas as pd
 from dateroll import Duration, ddh
 from scipy import interpolate
 
-from ratecurve.equations import *
-from ratecurve.utils import *
-
+from ratecurve import utils, equations
 # Standin for upcoming dateroll features
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days
 Duration.yf = lambda self, *args, **kwargs: self.just_days / 365
@@ -77,10 +75,10 @@ class Curve:
                     "Data must be dictionary, series, or DataFrame with shape (<=1,<=1)."
                 )
             else:
-                if isdatelike(d.columns[0]):
+                if utils.isdatelike(d.columns[0]):
                     data = d.T.iloc[:, 0].to_dict()
                     self.dates, self.rates = self.validate_data(data)
-                elif isdatelike(d.index[0]):
+                elif utils.isdatelike(d.index[0]):
                     data = d.iloc[:, 0].to_dict()
                     self.dates, self.rates = self.validate_data(data)
                 else:
@@ -119,13 +117,13 @@ class Curve:
         """
         Converts tenors to dates relative to Curve.base date.
         """
-        return to_dateroll_date(datelike, self.base)
+        return utils.to_dateroll_date(datelike, self.base)
 
     def _dt(self, date1, date2):
         """
         Calculates year fraction between 2 dates.
         """
-        return delta_t(date1, date2, self.dc, self.cal)
+        return utils.delta_t(date1, date2, self.dc, self.cal)
 
     def _t(self, date):
         """
@@ -168,19 +166,19 @@ class Curve:
             elif interp_on in ("rt", "r*t"):
                 return r * t
             elif interp_on == "ln(df)":
-                df = disc_factor(r, t, method)
-                return ln(df)
+                df = equations.disc_factor(r, t, method)
+                return equations.ln(df)
             else:
                 raise ValueError(f"Unknown interp_on {interp_on}")
 
         def from_y(t, y):
             # From interpolated form to cap factor
             if interp_on == "r":
-                return cap_factor(y, t, self.method)
+                return equations.cap_factor(y, t, self.method)
             elif interp_on in ("rt", "r*t"):
-                return cap_factor(y / t, t, self.method)
+                return equations.cap_factor(y / t, t, self.method)
             elif interp_on == "ln(df)":
-                df = e**y
+                df = equations.e**y
                 return 1 / df
 
         return to_y, from_y
@@ -190,13 +188,13 @@ class Curve:
         Converts date or list of dates to a number(s) for interpolation. Number is
         days since root date (originally set to 1/1/2000).
         """
-        return from_date_to_number(date, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
+        return utils.from_date_to_number(date, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
 
     def make_number_a_date(self, number):
         """
         Convers interpolation number to date.
         """
-        return from_number_to_date(number, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
+        return utils.from_number_to_date(number, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
 
     def fit(self):
         """
@@ -238,7 +236,7 @@ class Curve:
         """
         cf12 = self.cap_factor(date1, date2)
         dt = self._dt(date1, date2)
-        r12 = convert_cap_factor_to_rate(cf12, dt, self.method)
+        r12 = equations.convert_cap_factor_to_rate(cf12, dt, self.method)
         return r12
 
     def spot(self, date):
