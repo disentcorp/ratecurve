@@ -4,7 +4,7 @@ from dateroll import ddh, Duration
 from ratecurve.utils import *
 
 Duration.just_bds = lambda self, *args,**kwargs: self.just_days
-
+Duration.yf = lambda self, *args,**kwargs: self.just_days/365
 class TestUtils(unittest.TestCase):
     @classmethod
     def setUpClass(cls): ...
@@ -31,12 +31,12 @@ class TestUtils(unittest.TestCase):
         #with base
         good_base = ddh('1/1/2000')
         bad_base = 'apple'
-        to_dateroll_date(good_string_tenor,good_base)
+        self.assertEqual(to_dateroll_date(good_string_tenor,good_base),good_base+ddh(good_string_tenor))
         with self.assertRaises(Exception):
             to_dateroll_date(bad_date,good_base)
             to_dateroll_date(good_string_tenor,bad_base)
         #without base
-        to_dateroll_date(good_date)
+        self.assertEqual(to_dateroll_date(good_date),ddh('t'))
         with self.assertRaises(Exception):
             to_dateroll_date(good_string_tenor)
             to_dateroll_date(bad_string)
@@ -48,25 +48,24 @@ class TestUtils(unittest.TestCase):
         root = ddh('1/1/2000')
         good_date = ddh('t')
         bad_type = 5
-        from_date_to_number(good_date, root, "ACT/365", cal)
-        from_date_to_number(good_date, root, "bd/252", cal)
+        self.assertEqual(from_date_to_number(good_date, root, "ACT/365", cal),(good_date - root).just_days)
+        self.assertEqual(from_date_to_number(good_date, root, "bd/252", cal),(good_date - root).just_days)
         with self.assertRaises(Exception):
-            dc = "ACT/365"
-            from_date_to_number(bad_type, root, dc, cal)
+            from_date_to_number(bad_type, root,"ACT/365" , cal)
     
     def test_from_number_to_date(self):
         cal = "ALL"
         root = ddh('1/1/2000')
         number = 10
         dc = "ACT/365"
-        from_number_to_date(number,root,dc, cal)
+        self.assertEqual(from_number_to_date(number,root,dc, cal),root + number)
 
     def test_delta_t(self):
         date1 = ddh('t')
         date2 = ddh('t+5')
         dc = "ACT/365"
         cal = "ALL"
-        delta_t(date1, date2, dc, cal)
+        self.assertEqual(delta_t(date1, date2, dc, cal),(date2 - date1).yf(cal, dc))
 
 if __name__ == "__main__":
     unittest.main()
