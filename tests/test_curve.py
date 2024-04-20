@@ -1,10 +1,8 @@
 import unittest
-import numpy as np
 import pandas as pd
 
 from dateroll import ddh, Duration
 from ratecurve import Curve
-from ratecurve.ratecurve import disc_factor,ln,e,convert_cap_factor_to_rate,cap_factor
 
 Duration.just_bds = lambda self, *args,**kwargs: self.just_days
 

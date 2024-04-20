@@ -18,7 +18,7 @@ def isdatelike(x):
                 try:
                     ddh(x)
                     return True
-                except:
+                except Exception:
                     return False
         return False
     
@@ -27,11 +27,11 @@ def to_dateroll_date(x, base=None):
     Converts input tenor to date relative to base if input not date already.
     '''
     # base must be convertable to dateroll.Date if not None
-    if base != None:
+    if base is not None:
         try:
             base_date = ddh(base)
             assert isinstance(base_date, Date)
-        except:
+        except Exception:
             raise TypeError("Base date must be convertable to dateroll.Date")
 
     # If string, try to convert and recurse on converted value
@@ -39,7 +39,7 @@ def to_dateroll_date(x, base=None):
         try:
             date_like = ddh(x) 
             return to_dateroll_date(date_like, base)
-        except:
+        except Exception:
             raise TypeError('Input must be convertible to dateroll.Date or dateroll.Tenor.')
     # If already date-like, convert to dateroll type and convert to date relative to base
     elif isdatelike(x):
@@ -49,7 +49,7 @@ def to_dateroll_date(x, base=None):
         elif isinstance(dateroll_obj, Duration):
             try:
                 return base_date + dateroll_obj
-            except:
+            except Exception:
                 # Will fail if no base given
                 raise ValueError("Cannot convert tenor without a base date.")     
     else:

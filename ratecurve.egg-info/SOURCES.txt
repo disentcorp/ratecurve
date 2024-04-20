@@ -4,7 +4,9 @@ README.md
 setup.py
 ratecurve/__init__.py
 ratecurve/__main__.py
+ratecurve/equations.py
 ratecurve/ratecurve.py
+ratecurve/utils.py
 ratecurve.egg-info/PKG-INFO
 ratecurve.egg-info/SOURCES.txt
 ratecurve.egg-info/dependency_links.txt
@@ -12,4 +14,6 @@ ratecurve.egg-info/not-zip-safe
 ratecurve.egg-info/requires.txt
 ratecurve.egg-info/top_level.txt
 tests/test_curve.py
+tests/test_equations.py
 tests/test_suite.py
+tests/test_utils.py

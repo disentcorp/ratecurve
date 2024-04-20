@@ -1,14 +1,14 @@
 import pandas as pd
 from scipy import interpolate
-
-from dateroll import ddh, Date, Duration
+from ratecurve.equations import *
+from ratecurve.utils import *
+from dateroll import ddh, Duration
 
 # Standin for upcoming dateroll features 
 Duration.just_bds = lambda self, *args,**kwargs: self.just_days
 Duration.yf = lambda self, *args,**kwargs: self.just_days/365
 
-from ratecurve.equations import *
-from ratecurve.utils import *
+
 
 INTERPOLATION_ROOT_DATE = '1/1/2000'
 
@@ -95,7 +95,7 @@ class Curve:
                     raise
                 x.append(key_as_date)
                 y.append(val)
-            except:
+            except Exception:
                 raise ValueError('Invalid data. Data must be of form {[date-like object]:float}')
         self.raw_data = data
         return x, y

@@ -1,5 +1,4 @@
 import unittest
-import datetime
 from dateroll import ddh, Duration
 from ratecurve.utils import *
 from ratecurve.equations import *

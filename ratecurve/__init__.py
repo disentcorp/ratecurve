@@ -1,4 +1,4 @@
-from ratecurve.ratecurve import Curve
+from ratecurve.ratecurve import Curve as Curve
 
 # # for backwards compatibility testing
 # import sys
