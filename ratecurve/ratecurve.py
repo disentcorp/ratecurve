@@ -3,6 +3,7 @@ from dateroll import Duration, ddh
 from scipy import interpolate
 
 from ratecurve import utils, equations
+
 # Standin for upcoming dateroll features
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days
 Duration.yf = lambda self, *args, **kwargs: self.just_days / 365
@@ -188,13 +189,17 @@ class Curve:
         Converts date or list of dates to a number(s) for interpolation. Number is
         days since root date (originally set to 1/1/2000).
         """
-        return utils.from_date_to_number(date, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
+        return utils.from_date_to_number(
+            date, INTERPOLATION_ROOT_DATE, self.dc, self.cal
+        )
 
     def make_number_a_date(self, number):
         """
         Convers interpolation number to date.
         """
-        return utils.from_number_to_date(number, INTERPOLATION_ROOT_DATE, self.dc, self.cal)
+        return utils.from_number_to_date(
+            number, INTERPOLATION_ROOT_DATE, self.dc, self.cal
+        )
 
     def fit(self):
         """
