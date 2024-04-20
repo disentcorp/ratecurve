@@ -1,9 +1,6 @@
 import unittest
-import numpy as np
-import pandas as pd
 import datetime
 from dateroll import ddh, Duration
-from ratecurve import Curve
 from ratecurve.utils import *
 
 Duration.just_bds = lambda self, *args,**kwargs: self.just_days
@@ -28,7 +25,6 @@ class TestUtils(unittest.TestCase):
     def test_to_dateroll_date(self):
         good_date = ddh('t')
         bad_date = datetime.date.today()
-        good_string_date = '1/1/2000'
         good_string_tenor = '3m'
         bad_string = 'apple'
         bad_type = 5
@@ -64,7 +60,7 @@ class TestUtils(unittest.TestCase):
         number = 10
         dc = "ACT/365"
         from_number_to_date(number,root,dc, cal)
-        
+
     def test_delta_t(self):
         date1 = ddh('t')
         date2 = ddh('t+5')

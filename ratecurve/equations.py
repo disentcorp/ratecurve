@@ -45,7 +45,7 @@ def convert_disc_factor_to_rate(df, t, method):
     Converts disc_factor to rate for given methods and time for how disc_factor was calculated.
     '''
     cf = 1/df
-    return convert_disc_factor_to_rate(cf, t, method)
+    return convert_cap_factor_to_rate(cf, t, method)
 
 
     

@@ -67,6 +67,15 @@ class TestCurve(unittest.TestCase):
             c3 = Curve(3)
         with self.assertRaises(Exception):
             c4 = Curve(bad_dict)
+    
+    def test_make_number_a_date(self):
+         curve_data =  {
+        "0m":.053,    
+        "1m":.0548,
+        "30y":.0465}
+         curve = Curve(curve_data)
+         num = 1000
+         curve.make_number_a_date(num)       
 
     def test_fit(self):
         curve_data =  {

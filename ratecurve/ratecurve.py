@@ -167,11 +167,8 @@ class Curve:
             elif interp_on == 'ln(df)':
                 df = e**y
                 return 1/df
-            else:
-                raise ValueError(f'Unknown interp_on {interp_on}')
                         
         return to_y, from_y
-    
     
     def make_date_a_number(self, date):
         '''
@@ -197,6 +194,9 @@ class Curve:
         self.interpolator_unadjusted = interpolate.interp1d(x, y, kind=self.interp_method)
 
     def interpolate_cap_factor(self, date):
+        '''
+        Adjusts raw interpolation to return cap factor for given date.
+        '''
         validated_t = self._t(date)
         x = self.to_x(date)
         unadjusted_interpolation = self.interpolator_unadjusted(x)
