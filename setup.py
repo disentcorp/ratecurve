@@ -4,8 +4,8 @@ setup(
     name="ratecurve",
     version="0.0.1",
     description="""simple utility for curve interpolation""",
-    author="Anthony Malizzio",
-    author_email="anthony.malizzio@disent.com",
+    author="Disent",
+    author_email="chris@disent.com",
     license="Apache Software License",
     url="https://github.com/disentcorp/dateroll",
     classifiers=[
