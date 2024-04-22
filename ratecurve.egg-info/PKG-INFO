@@ -2,7 +2,7 @@ Metadata-Version: 2.1
 Name: ratecurve
 Version: 0.0.1
 Summary: simple utility for curve interpolation
-Home-page: https://github.com/disentcorp/dateroll
+Home-page: https://github.com/disentcorp/ratecurve
 Author: Disent
 Author-email: chris@disent.com
 License: Apache Software License
@@ -25,4 +25,7 @@ Classifier: Topic :: Utilities
 Classifier: Operating System :: Unix
 Requires-Python: >=3.7
 License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scipy
 Requires-Dist: dateroll
