@@ -5,6 +5,7 @@ from tests.test_curve import TestCurve
 from tests.test_utils import TestUtils
 from tests.test_equations import TestEquations
 
+
 def test_suite():
     """
     add test cases into suite
