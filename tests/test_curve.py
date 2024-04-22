@@ -1,7 +1,7 @@
 import unittest
-import pandas as pd
 
-from dateroll import ddh, Duration
+import pandas as pd
+from dateroll import Duration, ddh
 from ratecurve import Curve
 
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days

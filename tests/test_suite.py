@@ -1,9 +1,8 @@
 import unittest
 
-
 from tests.test_curve import TestCurve
-from tests.test_utils import TestUtils
 from tests.test_equations import TestEquations
+from tests.test_utils import TestUtils
 
 
 def test_suite():

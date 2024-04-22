@@ -1,9 +1,8 @@
 import unittest
-from dateroll import ddh, Duration
-from ratecurve import utils
-from ratecurve import equations
-import numpy as np
 
+import numpy as np
+from dateroll import Duration, ddh
+from ratecurve import equations, utils
 
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days
 # Shorthand for e, ln

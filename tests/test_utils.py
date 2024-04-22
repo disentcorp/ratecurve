@@ -1,6 +1,7 @@
-import unittest
 import datetime
-from dateroll import ddh, Duration
+import unittest
+
+from dateroll import Duration, ddh
 from ratecurve import utils
 
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days
