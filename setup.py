@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="ratecurve",
-    version="0.0.2",
+    version="0.0.3",
     description="""simple utility for curve interpolation""",
     author="Disent",
     author_email="chris@disent.com",

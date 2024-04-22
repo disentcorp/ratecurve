@@ -16,4 +16,5 @@ ratecurve.egg-info/top_level.txt
 tests/test_curve.py
 tests/test_equations.py
 tests/test_suite.py
+tests/test_usage.py
 tests/test_utils.py
