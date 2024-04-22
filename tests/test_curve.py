@@ -52,7 +52,7 @@ class TestCurve(unittest.TestCase):
 
     def test_curve_bad_data_validation(self):
         """
-        test the data validation of curve
+        test the data validation errors of curve
         """
         bad_dict = {"1m":'apple'}
         bad_dimension_dataframe = pd.DataFrame({"A":[1,2,3],"B":[1,2,3]})
@@ -67,15 +67,21 @@ class TestCurve(unittest.TestCase):
             c4 = Curve(bad_dict)
     
     def test_make_number_a_date(self):
-         curve_data =  {
+        '''
+        test number to date conversion
+        '''
+        curve_data =  {
         "0m":.053,    
         "1m":.0548,
         "30y":.0465}
-         curve = Curve(curve_data)
-         num = 1000
-         curve.make_number_a_date(num)       
+        curve = Curve(curve_data)
+        num = 1000
+        curve.make_number_a_date(num)       
 
     def test_fit(self):
+        '''
+        test interpolation for various methods
+        '''
         curve_data =  {
         "0m":.053,    
         "1m":.0548,
@@ -88,6 +94,9 @@ class TestCurve(unittest.TestCase):
             c4 = Curve(curve_data,interp_on = 'apple')
 
     def test_call(self):
+        '''
+        test callable class
+        '''
         curve_data =  {
         "0m":.053,    
         "1m":.0548,
@@ -104,6 +113,9 @@ class TestCurve(unittest.TestCase):
             curve(d1,d2,'apple')
 
     def test_fwd(self):
+        '''
+        test call for forward rate across various interpolation methods
+        '''
         curve_data =  {
         "0m":.053,    
         "1m":.0548,
@@ -121,6 +133,9 @@ class TestCurve(unittest.TestCase):
         c2(d1,d2)
     
     def test_spot(self):
+        '''
+        test spot function
+        '''
         curve_data =  {
         "0m":.053,    
         "1m":.0548,
