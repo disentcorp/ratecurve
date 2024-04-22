@@ -22,6 +22,7 @@ class TestCurve(unittest.TestCase):
         "1m":.0548,
         "30y":.0465}
         curve = Curve(curve_data)
+        self.assertEqual(curve.raw_data, curve_data)
 
     def test_curve_data_validation(self):
         """
@@ -47,8 +48,12 @@ class TestCurve(unittest.TestCase):
         df_curve_data = pd.DataFrame(series_curve_data)
         df_curve_data_transpose = df_curve_data.T
         c1 = Curve(series_curve_data)
+        self.assertEqual(c1.raw_data, dict_curve_data)
         c2 = Curve(df_curve_data)
+        self.assertEqual(c2.raw_data, dict_curve_data)
         c3 = Curve(df_curve_data_transpose)
+        self.assertEqual(c3.raw_data, dict_curve_data)
+
 
     def test_curve_bad_data_validation(self):
         """
@@ -88,8 +93,11 @@ class TestCurve(unittest.TestCase):
         "30y":.0465}
         #test toy
         c1 = Curve(curve_data,interp_on = 'r')
+        self.assertAlmostEqual(c1.spot('1m'),.0548)
         c2 = Curve(curve_data,interp_on = 'r*t')
+        self.assertAlmostEqual(c2.spot('1m'),.0548)
         c3 = Curve(curve_data,interp_on = 'ln(df)')
+        self.assertAlmostEqual(c3.spot('1m'),.0548)
         with self.assertRaises(Exception):
             c4 = Curve(curve_data,interp_on = 'apple')
 
@@ -131,6 +139,7 @@ class TestCurve(unittest.TestCase):
         #test from_y for various interp methods
         c1(d1,d2)
         c2(d1,d2)
+        c3(d1, d2)
     
     def test_spot(self):
         '''
