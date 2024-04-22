@@ -97,6 +97,7 @@ class Curve:
         """
         x = []
         y = []
+        base_rate = None  # Rate associated with earliest date
         for i in data.items():
             key = i[0]
             val = i[1]
@@ -107,11 +108,16 @@ class Curve:
                     raise
                 x.append(key_as_date)
                 y.append(val)
+                if key_as_date == self.base:  
+                    # Case where rate data contains a 0-tenor. Will need the rate at base_date
+                    # to avoid complications from calling self.spot(base_date)
+                    base_rate = val
             except Exception:
                 raise ValueError(
                     "Invalid data. Data must be of form {[date-like object]:float}"
                 )
         self.raw_data = data
+        self.base_rate = base_rate
         return x, y
 
     def to_date(self, datelike):
@@ -137,13 +143,18 @@ class Curve:
         Interpolated cap factor of curve between two dates. See docs for
         ratecurve.equations.cap_factor for more details.
         """
+        # Validate dates
+        validated_date1 = utils.to_dateroll_date(date1, base=self.base)
+        validated_date2 = utils.to_dateroll_date(date2, base=date1)
         # Get interpolated cap factor
-        cf01 = self.interpolate_cap_factor(date1)
-        cf02 = self.interpolate_cap_factor(date2)
-
+        cf01 = self.interpolate_cap_factor(validated_date1)
+        cf02 = self.interpolate_cap_factor(validated_date2)
         # Compute forward cap factor
         cf12 = cf02 / cf01
         return cf12
+    
+    def convert_cap_factor_to_rate(self, cf, dt):
+        return equations.convert_cap_factor_to_rate(cf, dt, self.method, default=self.base_rate)
 
     def disc_factor(self, date1, date2):
         """
@@ -242,7 +253,7 @@ class Curve:
         """
         cf12 = self.cap_factor(date1, date2)
         dt = self._dt(date1, date2)
-        r12 = equations.convert_cap_factor_to_rate(cf12, dt, self.method)
+        r12 = self.convert_cap_factor_to_rate(cf12, dt)
         return r12
 
     def spot(self, date):

@@ -33,10 +33,14 @@ def disc_factor(r, t, method):
     return 1 / cap_factor(r, t, method)
 
 
-def convert_cap_factor_to_rate(cf, t, method):
+def convert_cap_factor_to_rate(cf, t, method, default=None):
     """
-    Converts cap_factor to rate.
+    Converts cap_factor to rate. If default provided, will serve as default answer
+    when t = 0.
     """
+    if t == 0:
+        return np.inf if default is None else default
+    
     if method == "EXP":
         r = ln(cf) / t
     elif method == "YLD":

@@ -74,7 +74,7 @@ def from_date_to_number(date, root, dc, cal):
     days since root date.
     """
     validated_root = to_dateroll_date(root)
-    validated_date = to_dateroll_date(date, validated_root)
+    validated_date = to_dateroll_date(date, base=validated_root)
 
     if dc.lower().startswith("bd"):
         return (validated_date - validated_root).just_bds(cal=cal, dc=dc)
@@ -98,5 +98,5 @@ def delta_t(date1, date2, dc, cal):
     """
     # Validate and convert to appropriate dates
     validated_date1 = to_dateroll_date(date1)
-    validated_date2 = to_dateroll_date(date2)
+    validated_date2 = to_dateroll_date(date2, base=validated_date1)
     return (validated_date2 - validated_date1).yf(cal, dc)

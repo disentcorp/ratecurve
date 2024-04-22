@@ -3,7 +3,7 @@ import unittest
 from tests.test_curve import TestCurve
 from tests.test_equations import TestEquations
 from tests.test_utils import TestUtils
-
+from tests.test_usage import TestUsage
 
 def test_suite():
     """
@@ -14,6 +14,7 @@ def test_suite():
             unittest.TestLoader().loadTestsFromTestCase(TestCurve),
             unittest.TestLoader().loadTestsFromTestCase(TestEquations),
             unittest.TestLoader().loadTestsFromTestCase(TestUtils),
+            unittest.TestLoader().loadTestsFromTestCase(TestUsage)
         ]
     )
     return suite
