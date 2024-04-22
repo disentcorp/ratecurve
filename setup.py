@@ -7,7 +7,7 @@ setup(
     author="Disent",
     author_email="chris@disent.com",
     license="Apache Software License",
-    url="https://github.com/disentcorp/dateroll",
+    url="https://github.com/disentcorp/ratecurve",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
@@ -31,7 +31,7 @@ setup(
         "ratecurve",
     ],
     include_package_data=True,
-    install_requires=["dateroll"],
+    install_requires=["numpy","pandas","scipy","dateroll"],
     license_files=("LICENSE",),
     python_requires=">=3.7",
     zip_safe=False,
