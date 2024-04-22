@@ -10,6 +10,10 @@ def cap_factor(r, t, method):
     The disc_factor is a multiple used to get the present value of a future value.
     (PV = FV*DiscountFactor) Computed with a given rate, method and time.
     """
+    if t == 0:
+        # If t == 0, there is no 'future value', just present value. This avoides division by 0 errors.
+        return 1
+    
     if method == "EXP":
         cf = e ** (r * t)
     elif method == "YLD":

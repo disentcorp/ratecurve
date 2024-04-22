@@ -177,7 +177,8 @@ class Curve:
             if interp_on == "r":
                 return equations.cap_factor(y, t, self.method)
             elif interp_on in ("rt", "r*t"):
-                return equations.cap_factor(y / t, t, self.method)
+                # Cannot divide by 0, cap_factor at t = 0 is 1.
+                return equations.cap_factor(y / t, t, self.method) if t > 0 else 1
             elif interp_on == "ln(df)":
                 df = equations.e**y
                 return 1 / df
