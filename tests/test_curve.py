@@ -162,17 +162,17 @@ class TestCurve(unittest.TestCase):
             curve_data,
             interp_on='r*t'
         )
+        self.assertAlmostEqual(c1.spot(d1),.053)  # Floating point errors occur
+        self.assertAlmostEqual(c1.spot(d2),.0465)         
         c2 = Curve(
             curve_data
         )
+        self.assertAlmostEqual(c2.spot(d1),.053)  
+        self.assertAlmostEqual(c2.spot(d2),.0465)
         c3 = Curve(
             curve_data,
             interp_on = 'r'      
                   )
-        self.assertAlmostEqual(c1.spot(d1),.053)  # Floating point errors occur
-        self.assertAlmostEqual(c1.spot(d2),.0465)        
-        self.assertAlmostEqual(c2.spot(d1),.053)  
-        self.assertAlmostEqual(c2.spot(d2),.0465)
         self.assertAlmostEqual(c3.spot(d1),.053)  
         self.assertAlmostEqual(c3.spot(d2),.0465)
 
@@ -186,6 +186,9 @@ class TestCurve(unittest.TestCase):
         c6 = Curve(curve_data, extrap_method='extrapolate')
         self.assertLess(c6.spot(d1),.053)
         self.assertLess(c6.spot(d2),.0465)
+
+
+
 
 
 if __name__ == "__main__":

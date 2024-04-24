@@ -68,7 +68,7 @@ class Curve:
         self.extrap_method = extrap_method
         # Transformations for input and outputs to interpolation
         self.to_x = lambda x: self.make_date_a_number(x)
-        self.to_y, self.from_y, self.from_extrapolated_capf = self.get_y_transformers(interp_on, method)
+        self.to_y, self.from_y, = self.get_y_transformers(interp_on, method)
 
         # Data processing and validation will parse and store dates and rates
         if isinstance(d, dict):
@@ -183,14 +183,8 @@ class Curve:
             elif interp_on == "ln(df)":
                 df = equations.e**y     
                 return 1 / df
-            
-        def from_extrapolated_capf(date1, date2):
-            if date1 < self.earliest_date and date2 < self.earliest_date:
-                return self.earliest_rate 
-            elif date2 > self.latest_date:
-                return self.latest_rate
 
-        return to_y, from_y, from_extrapolated_capf
+        return to_y, from_y, 
     
 
     def to_date(self, datelike):
@@ -233,20 +227,18 @@ class Curve:
         return cf12
     
     def convert_cap_factor_to_rate(self, cf, date1, date2):
+        '''
+        Converts cap factor to rate.
+        '''
         validated_date1 = utils.to_dateroll_date(date1, base=self.base)
         validated_date2 = utils.to_dateroll_date(date2, base=date1)
         dt = self._dt(validated_date1, validated_date2)
-
-        if self.extrap_method=='flat':
-            default_rate = self.earliest_rate
-            if validated_date2 < self.earliest_date:
-                return self.earliest_rate 
-            elif validated_date2 > self.latest_date and validated_date1 == self.base:
-                return self.latest_rate
-        
-        elif self.extrap_method == 'extrapolate':
-            default_rate = self.interpolate_r0()
-        return equations.convert_cap_factor_to_rate(cf, dt, self.method, default=default_rate)
+        hasExtrapolatedDate = self._is_extrapolated_date(validated_date1) or self._is_extrapolated_date(validated_date2)
+        default_rate = self.interpolate_r0() if self.extrap_method == 'extrapolate' else self.earliest_rate
+        if hasExtrapolatedDate:
+            return self.extrapolated_rate_from_cf(cf, validated_date1, validated_date2)
+        else:
+            return equations.convert_cap_factor_to_rate(cf, dt, self.method, default=default_rate)
 
     def disc_factor(self, date1, date2):
         """
@@ -333,8 +325,6 @@ class Curve:
             x, y, kind=self.interp_method, bounds_error=False, fill_value=fill_value
         )
 
-
-
     def extrapolate_cap_factor(self, date):
         if date <= self.earliest_date:
             extrapolator =  self.front_extrapolator_undajusted
@@ -348,6 +338,21 @@ class Curve:
         cf = self.from_y(validated_t, unadjusted_interpolation)
         return cf       
 
+    def extrapolated_rate_from_cf(self, cf, date1, date2):
+        '''
+        Returns rates on dates that are outside of provided data.
+        '''
+        dt = self._dt(date1, date2)
+        if self.extrap_method=='flat':
+            if date2 < self.earliest_date:
+                rate = self.earliest_rate 
+            elif date2 > self.latest_date and (date1 == self.base or date1 > self.latest_date):
+                rate = self.latest_rate
+            else:
+                rate = equations.convert_cap_factor_to_rate(cf, dt, self.method, default=self.earliest_rate)
+        else:
+            rate = equations.convert_cap_factor_to_rate(cf, dt, self.method, default=self.interpolate_r0())
+        return rate
 
     def interpolate_cap_factor(self, date):
         """
