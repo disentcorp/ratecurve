@@ -33,13 +33,36 @@ class TestUsage(unittest.TestCase):
         """
         testing bug fix for curve.spot(self.base). Should return earliest rate provided.
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
-        curve = Curve(curve_data)
-
+        curve_data = {"4d": 0.053, "1m": 0.0548, "30y": 0.0465}
         date = ddh("t")
-        # test spot call
-        rate_0 = curve.spot(date)
-        self.assertEqual(rate_0, .053)
+
+        # Test across different interp_ons and flat
+        c1 = Curve(curve_data, interp_on='r')
+        rate_1 = c1.spot(date)
+        self.assertEqual(rate_1, .053)
+
+        c2 = Curve(curve_data, interp_on='r*t')
+        rate_2 = c2.spot(date)
+        self.assertEqual(rate_2, .053)
+
+
+        c3 = Curve(curve_data)
+        rate_3 = c3.spot(date)
+        self.assertEqual(rate_3, .053)
+
+        # Test across different interp_ons and extrapolate
+        c4 = Curve(curve_data, interp_on='r', extrap_method="extrapolate")
+        rate_4 = c4.spot(date)        
+        self.assertLess(rate_4, .053)
+        c5 = Curve(curve_data, interp_on='r*t', extrap_method="extrapolate")
+        rate_5 = c5.spot(date)
+        self.assertLess(rate_5, .053)
+        c6 = Curve(curve_data, extrap_method="extrapolate")
+        rate_6 = c6.spot(date)
+        # Should be less than if interpolated properly (t+4d, .053),(t+1m, .0548)
+        
+        
+        self.assertLess(rate_6, .053)
 
 
 

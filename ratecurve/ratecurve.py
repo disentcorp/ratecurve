@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from dateroll import Duration, ddh
 from scipy import interpolate
@@ -32,6 +33,7 @@ class Curve:
         method="EXP",
         interp_on="ln(df)",
         interp_method="linear",
+        extrap_method='flat',
         base="t",
     ):
         """
@@ -50,6 +52,10 @@ class Curve:
             Y-transformation performed on rates before interpolating. Support for 'ln(df)', 'r*t' and 'r'.
         interp_method
             Kind of interpolation performed on data. See scipy.interp1d documentation for details.
+        extrap_method
+            Kind of extrapolation performed on dates outside of date bounds given. Can be either 'flat' or 'extrapolate'.
+            'flat' will return earliest value given for all dates prior. 'extrapolate' will extrapolate from interpolated
+            curve. See scipy.interp1d documentation for details.      
         base
             Date at head of curve. Default is current date.
         """
@@ -59,6 +65,7 @@ class Curve:
         self.interp_on = interp_on
         self.cal = cal
         self.interp_method = interp_method
+        self.extrap_method = extrap_method
         # Transformations for input and outputs to interpolation
         self.to_x = lambda x: self.make_date_a_number(x)
         self.to_y, self.from_y = self.get_y_transformers(interp_on, method)
@@ -97,7 +104,10 @@ class Curve:
         """
         x = []
         y = []
-        base_rate = None  # Rate associated with earliest date
+        earliest_date = None
+        latest_date = None
+        earliest_rate = None 
+        latest_rate = None
         for i in data.items():
             key = i[0]
             val = i[1]
@@ -108,17 +118,73 @@ class Curve:
                     raise
                 x.append(key_as_date)
                 y.append(val)
-                if key_as_date == self.base:  
-                    # Case where rate data contains a 0-tenor. Will need the rate at base_date
-                    # to avoid complications from calling self.spot(base_date)
-                    base_rate = val
+                if earliest_date is None or key_as_date < earliest_date:
+                    earliest_date = key_as_date 
+                    earliest_rate = val
+                if latest_date is None or key_as_date > latest_date:
+                    latest_date = key_as_date 
+                    latest_rate = val           
+            
             except Exception:
                 raise ValueError(
                     "Invalid data. Data must be of form {[date-like object]:float}"
                 )
+            
+        if self.interp_on == "ln(df)":
+            # Will not interpolate properly on ln(df) if x = 0 is not provided
+            x.append(self.base)
+            y.append(None)
+
         self.raw_data = data
-        self.base_rate = base_rate
+        self.earliest_date = earliest_date
+        self.earliest_rate = earliest_rate
+        self.latest_date = latest_date
+        self.latest_rate = latest_rate
         return x, y
+    
+    def get_y_transformers(self, interp_on, method):
+        """
+        Returns 2 functions:
+            1. Convert raw rates into interpolated form
+            2. Convert interpolated form to raw_rates
+        """
+        def to_y(t, rate):
+            # From rate to interpolated form
+            r = rate
+            if interp_on == "r":
+                return r
+            elif interp_on in ("rt", "r*t"):
+                return r * t
+            elif interp_on == "ln(df)":
+                if t == 0:
+                    return 0
+                else:
+                    df = equations.disc_factor(r, t, method)
+                    return equations.ln(df)
+            else:
+                raise ValueError(f"Unknown interp_on {interp_on}")
+
+        def from_y(t, y):
+            # From interpolated form to cap factor
+            if t <= 0:
+                return 1
+            # Perform time adjustment for flat extrapolation
+            if self.extrap_method == 'flat':
+                if t < self._t(self.earliest_date):
+                    t = self._t(self.earliest_date)
+                elif t > self._t(self.latest_date):
+                    t = self._t(self.latest_date)
+
+            if interp_on == "r":
+                return equations.cap_factor(y, t, self.method)
+            elif interp_on in ("rt", "r*t"):
+                return equations.cap_factor(y / t, t, self.method)
+            elif interp_on == "ln(df)":
+                df = equations.e**y     
+                return 1 / df
+
+        return to_y, from_y
+    
 
     def to_date(self, datelike):
         """
@@ -153,8 +219,19 @@ class Curve:
         cf12 = cf02 / cf01
         return cf12
     
-    def convert_cap_factor_to_rate(self, cf, dt):
-        return equations.convert_cap_factor_to_rate(cf, dt, self.method, default=self.base_rate)
+    def convert_cap_factor_to_rate(self, cf, date1, date2):
+        # extrapolated 
+        dt = self._dt(date1, date2)
+        if self.extrap_method=='flat':
+            default_rate = self.earliest_rate
+            # # Adjust dt if flat extrapolation to ensure proper conversion
+            if self._t(date2) < self._t(self.earliest_date) and self.interp_on != 'ln(df)': # here because extrap for lndf is different - i fix a t=0 at 0 for that to interp properly which messes up interpolation
+                dt = self._dt(date1, self.earliest_date)
+            elif self._t(date2) > self._t(self.latest_date):
+                dt = self._dt(date1, self.latest_date)
+        else:
+            default_rate =  self.interpolate_r0()
+        return equations.convert_cap_factor_to_rate(cf, dt, self.method, default=default_rate)
 
     def disc_factor(self, date1, date2):
         """
@@ -163,38 +240,7 @@ class Curve:
         """
         return 1 / self.cap_factor(date1, date2)
 
-    def get_y_transformers(self, interp_on, method):
-        """
-        Returns 2 functions:
-            1. Convert raw rates into interpolated form
-            2. Convert interpolated form to raw_rates
-        """
 
-        def to_y(t, rate):
-            # From rate to interpolated form
-            r = rate
-            if interp_on == "r":
-                return r
-            elif interp_on in ("rt", "r*t"):
-                return r * t
-            elif interp_on == "ln(df)":
-                df = equations.disc_factor(r, t, method)
-                return equations.ln(df)
-            else:
-                raise ValueError(f"Unknown interp_on {interp_on}")
-
-        def from_y(t, y):
-            # From interpolated form to cap factor
-            if interp_on == "r":
-                return equations.cap_factor(y, t, self.method)
-            elif interp_on in ("rt", "r*t"):
-                # Cannot divide by 0, cap_factor at t = 0 is 1.
-                return equations.cap_factor(y / t, t, self.method) if t > 0 else 1
-            elif interp_on == "ln(df)":
-                df = equations.e**y
-                return 1 / df
-
-        return to_y, from_y
 
     def make_date_a_number(self, date):
         """
@@ -212,7 +258,23 @@ class Curve:
         return utils.from_number_to_date(
             number, INTERPOLATION_ROOT_DATE, self.dc, self.cal
         )
-
+    
+    def interpolate_r0(self):
+        """
+        Interpolates r0 for returning on convert_cap_factor_to_rate when self.extrap_method = 'extrapolate'.
+        Raw interpolation of rate data. Interpolates by method specified for general interpolation.
+        """
+        dates = self.dates
+        rates = self.rates
+        x = [self.to_x(date) for date in dates if self.to_x(date) != self.to_x(self.base)]
+        y = [rates[i] for i in range(len(self.rates)) if rates[i] is not None]
+        rate_interpolation = interpolate.interp1d(
+            x, y, kind=self.interp_method, bounds_error=False, fill_value='extrapolate'
+        )
+        d0 = self.to_x(self.base)
+        rate = rate_interpolation(d0)
+        return float(rate)
+        
     def fit(self):
         """
         Fits interpolation and sets self.f
@@ -221,10 +283,23 @@ class Curve:
         rates = self.rates
         x = [self.to_x(date) for date in dates]
         y = [self.to_y(self._t(dates[i]), rates[i]) for i in range(len(self.rates))]
-        self.interpolator_unadjusted = interpolate.interp1d(
-            x, y, kind=self.interp_method
-        )
+        sorted_points = sorted(list(zip(x,y)), key=lambda x:x[0])
+        first_y = sorted_points[0][1]
+        last_y = sorted_points[-1][1]
+        front_extrap_value = first_y 
+        back_extrap_value = last_y 
+        
+        if self.extrap_method == 'extrapolate':
+            fill_value = 'extrapolate'
+        elif self.extrap_method == 'flat':
+            fill_value=(front_extrap_value, back_extrap_value)
+        else:
+            raise ValueError("Extrapolation methods must be either 'extrapolate' or 'flat'")
 
+        self.interpolator_unadjusted = interpolate.interp1d(
+            x, y, kind=self.interp_method, bounds_error=False, fill_value=fill_value
+        )
+        
     def interpolate_cap_factor(self, date):
         """
         Adjusts raw interpolation to return cap factor for given date.
@@ -252,8 +327,7 @@ class Curve:
         Computes forward rate between date a and date b.
         """
         cf12 = self.cap_factor(date1, date2)
-        dt = self._dt(date1, date2)
-        r12 = self.convert_cap_factor_to_rate(cf12, dt)
+        r12 = self.convert_cap_factor_to_rate(cf12, date1, date2)
         return r12
 
     def spot(self, date):

@@ -27,7 +27,7 @@ class TestCurve(unittest.TestCase):
         test the data validation of curve
         """
         dict_curve_data = {
-            "0m": 0.053,
+            "1d": 0.053,
             "1m": 0.0548,
             "2m": 0.0551,
             "3m": 0.0545,
@@ -73,7 +73,7 @@ class TestCurve(unittest.TestCase):
         """
         test number to date conversion
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
+        curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         curve = Curve(curve_data)
         num = 1000
         curve.make_number_a_date(num)
@@ -82,14 +82,24 @@ class TestCurve(unittest.TestCase):
         """
         test interpolation for various methods
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
+        curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         # test toy
         c1 = Curve(curve_data, interp_on="r")
+        c1.spot('0d')
+        self.assertAlmostEqual(c1.spot("1d"), 0.053)
         self.assertAlmostEqual(c1.spot("1m"), 0.0548)
+        self.assertAlmostEqual(c1.spot("30y"), 0.0465)
+
         c2 = Curve(curve_data, interp_on="r*t")
+        c2.spot('0d')
+        self.assertAlmostEqual(c2.spot("1d"), 0.053)
         self.assertAlmostEqual(c2.spot("1m"), 0.0548)
+        self.assertAlmostEqual(c2.spot("30y"), 0.0465)        
         c3 = Curve(curve_data, interp_on="ln(df)")
+        c3.spot('0d')
+        self.assertAlmostEqual(c3.spot("1d"), 0.053)
         self.assertAlmostEqual(c3.spot("1m"), 0.0548)
+        self.assertAlmostEqual(c3.spot("30y"), 0.0465)   
         with self.assertRaises(Exception):
             c4 = Curve(curve_data, interp_on="apple")
 
@@ -97,7 +107,7 @@ class TestCurve(unittest.TestCase):
         """
         test callable class
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
+        curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         curve = Curve(curve_data)
 
         d1 = ddh("t+6m")
@@ -113,7 +123,7 @@ class TestCurve(unittest.TestCase):
         """
         test call for forward rate across various interpolation methods
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
+        curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         c1 = Curve(curve_data, interp_on="r")
         c2 = Curve(curve_data, interp_on="r*t")
         c3 = Curve(curve_data, interp_on="ln(df)")
@@ -131,7 +141,7 @@ class TestCurve(unittest.TestCase):
         """
         test spot function
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
+        curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         curve = Curve(
             curve_data,
         )
@@ -139,6 +149,43 @@ class TestCurve(unittest.TestCase):
         curve.spot(d1)
         with self.assertRaises(Exception):
             curve.spot(d1, returns="apple")
+
+    def test_extrapolated_spot(self):
+        """
+        test spot function on extrapolated dates. test across interpolation methods, extrapolation methods and both forward and back
+        """
+        curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
+        d1 = ddh("t+1d")
+        d2 = ddh("t+31y")        
+        #extrap method = 'flat'
+        c1 = Curve(
+            curve_data,
+            interp_on='r*t'
+        )
+        c2 = Curve(
+            curve_data
+        )
+        c3 = Curve(
+            curve_data,
+            interp_on = 'r'      
+                  )
+        self.assertAlmostEqual(c1.spot(d1),.053)  # Floating point errors occur
+        self.assertAlmostEqual(c1.spot(d2),.0465)
+        self.assertAlmostEqual(c2.spot(d1),.053)  
+        self.assertAlmostEqual(c2.spot(d2),.0465)
+        self.assertAlmostEqual(c3.spot(d1),.053)  
+        self.assertAlmostEqual(c3.spot(d2),.0465)
+
+        # extrap method = 'extrapolate'
+        c4 = Curve(curve_data, extrap_method='extrapolate')
+        c5 = Curve(curve_data, extrap_method='extrapolate')
+        c6 = Curve(curve_data, extrap_method='extrapolate')
+        self.assertLess(c4.spot(d1),.053)
+        self.assertLess(c4.spot(d2),.0465)
+        self.assertLess(c5.spot(d1),.053)
+        self.assertLess(c5.spot(d2),.0465)
+        self.assertLess(c6.spot(d1),.053)
+        self.assertLess(c6.spot(d2),.0465)
 
 
 if __name__ == "__main__":
