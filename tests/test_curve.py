@@ -170,20 +170,20 @@ class TestCurve(unittest.TestCase):
             interp_on = 'r'      
                   )
         self.assertAlmostEqual(c1.spot(d1),.053)  # Floating point errors occur
-        self.assertAlmostEqual(c1.spot(d2),.0465)
+        self.assertAlmostEqual(c1.spot(d2),.0465)        
         self.assertAlmostEqual(c2.spot(d1),.053)  
         self.assertAlmostEqual(c2.spot(d2),.0465)
         self.assertAlmostEqual(c3.spot(d1),.053)  
         self.assertAlmostEqual(c3.spot(d2),.0465)
 
         # extrap method = 'extrapolate'
-        c4 = Curve(curve_data, extrap_method='extrapolate')
-        c5 = Curve(curve_data, extrap_method='extrapolate')
-        c6 = Curve(curve_data, extrap_method='extrapolate')
+        c4 = Curve(curve_data, interp_on = 'r', extrap_method='extrapolate')
         self.assertLess(c4.spot(d1),.053)
-        self.assertLess(c4.spot(d2),.0465)
+        self.assertLess(c4.spot(d2),.0465)        
+        c5 = Curve(curve_data, interp_on = 'r*t', extrap_method='extrapolate')
         self.assertLess(c5.spot(d1),.053)
-        self.assertLess(c5.spot(d2),.0465)
+        self.assertLess(c5.spot(d2),.0465)        
+        c6 = Curve(curve_data, extrap_method='extrapolate')
         self.assertLess(c6.spot(d1),.053)
         self.assertLess(c6.spot(d2),.0465)
 

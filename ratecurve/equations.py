@@ -36,7 +36,7 @@ def disc_factor(r, t, method):
 def convert_cap_factor_to_rate(cf, t, method, default=None):
     """
     Converts cap_factor to rate. If default provided, will serve as default answer
-    when t = 0.
+    when t = 0 or cf = 1.
     """
     if t == 0 or cf==1:
         return np.nan if default is None else default
