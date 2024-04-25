@@ -152,14 +152,14 @@ class TestCurve(unittest.TestCase):
         with self.assertRaises(Exception):
             curve.spot(d1, returns="apple")
 
-    def test_extrapolated_spot(self):
+    def test_extrapolated_spot_flat(self):
         """
         test spot function on extrapolated dates. test across interpolation methods, extrapolation methods and both forward and backwards interpolation
         """
         curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
         d1 = ddh("t+1d")
         d2 = ddh("t+31y")
-        # extrap method = 'flat'
+        # Test across interp_on
         c1 = Curve(curve_data, interp_on="r*t")
         self.assertAlmostEqual(c1.spot(d1), 0.053)  # Floating point errors occur
         self.assertAlmostEqual(c1.spot(d2), 0.0465)
@@ -170,16 +170,23 @@ class TestCurve(unittest.TestCase):
         self.assertAlmostEqual(c3.spot(d1), 0.053)
         self.assertAlmostEqual(c3.spot(d2), 0.0465)
 
-        # extrap method = 'extrapolate'
-        c4 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
-        self.assertLess(c4.spot(d1), 0.053)
-        self.assertLess(c4.spot(d2), 0.0465)
-        c5 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
-        self.assertLess(c5.spot(d1), 0.053)
-        self.assertLess(c5.spot(d2), 0.0465)
-        c6 = Curve(curve_data, extrap_method="extrapolate")
-        self.assertLess(c6.spot(d1), 0.053)
-        self.assertLess(c6.spot(d2), 0.0465)
+    def test_extrapolated_spot_extrapolate(self):
+        """
+        test spot function on extrapolated dates. test across interpolation methods, extrapolation methods and both forward and backwards interpolation
+        """
+        curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
+        d1 = ddh("t+1d")
+        d2 = ddh("t+31y")
+        # Test across interp_on
+        c1 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
+        self.assertLess(c1.spot(d1), 0.053)
+        self.assertLess(c1.spot(d2), 0.0465)
+        c2 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
+        self.assertLess(c2.spot(d1), 0.053)
+        self.assertLess(c2.spot(d2), 0.0465)
+        c3 = Curve(curve_data, extrap_method="extrapolate")
+        self.assertLess(c3.spot(d1), 0.053)
+        self.assertLess(c3.spot(d2), 0.0465)
 
     def test_extrapolated_fwd(self):
         """
