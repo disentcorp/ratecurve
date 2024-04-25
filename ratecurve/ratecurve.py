@@ -307,8 +307,8 @@ class Curve:
             for i in range(len(cf_y))
         ]
         sorted_points = sorted(list(zip(processed_x, r_y)), key=lambda x: x[0])
-        front_x = [sorted_points[i][0] for i in range(2)]
-        front_y = [sorted_points[i][1] for i in range(2)]
+        front_x = [sorted_points[i][0] for i in range(len(sorted_points))]
+        front_y = [sorted_points[i][1] for i in range(len(sorted_points))]
         rate_interpolation = interpolate.interp1d(
             front_x,
             front_y,
@@ -339,8 +339,8 @@ class Curve:
         front_extrap_value = sorted_points[0][1]
         back_extrap_value = sorted_points[-1][1]
         if self.extrap_method == "extrapolate":
-            front_x = [sorted_points[i][0] for i in range(2)]
-            front_y = [sorted_points[i][1] for i in range(2)]
+            front_x = [sorted_points[i][0] for i in range(len(sorted_points))]
+            front_y = [sorted_points[i][1] for i in range(len(sorted_points))]
             self.front_extrapolator_undajusted = interpolate.interp1d(
                 front_x,
                 front_y,
@@ -368,7 +368,7 @@ class Curve:
 
     def extrapolate_cap_factor(self, date):
         """
-        Returns cap_factor for dates that are outside of provided data.
+        Returns spot cap_factor for dates that are outside of provided data.
         """
         if date <= self.earliest_date:
             extrapolator = self.front_extrapolator_undajusted
