@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: ratecurve
-Version: 0.0.3
+Version: 0.0.4
 Summary: simple utility for curve interpolation
 Home-page: https://github.com/disentcorp/ratecurve
 Author: Disent
