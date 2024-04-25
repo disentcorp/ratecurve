@@ -40,7 +40,6 @@ def convert_cap_factor_to_rate(cf, t, method, default=None):
     """
     if t == 0 or cf==1:
         return np.nan if default is None else default
-    
     if method == "EXP":
         r = ln(cf) / t
     elif method == "YLD":

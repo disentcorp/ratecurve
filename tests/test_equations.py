@@ -27,7 +27,7 @@ class TestEquations(unittest.TestCase):
         d1 = ddh("t")
         d2 = ddh("t+1y")
         t = utils.delta_t(d1, d2, dc, cal)
-
+        self.assertEqual(equations.cap_factor(r, 0, "EXP"), 1)
         self.assertEqual(equations.cap_factor(r, t, "EXP"), e ** (r * t))
         self.assertEqual(equations.cap_factor(r, t, "LIN"), 1 + r * t)
         self.assertEqual(equations.cap_factor(r, t, "YLD"), (1 + r) ** t)
