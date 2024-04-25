@@ -18,7 +18,7 @@ class TestCurve(unittest.TestCase):
         """
         test init
         """
-        curve_data = {"0m": 0.053, "1m": 0.0548, "30y": 0.0465}
+        curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         curve = Curve(curve_data)
         self.assertEqual(curve.raw_data, curve_data)
 
