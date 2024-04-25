@@ -188,9 +188,9 @@ class TestCurve(unittest.TestCase):
         self.assertLess(c3.spot(d1), 0.053)
         self.assertLess(c3.spot(d2), 0.0465)
 
-    def test_extrapolated_fwd(self):
+    def test_extrapolated_fwd_flat(self):
         """
-        test fwd function on extrapolated dates. test across interpolation methods, extrapolation methods.
+        test fwd function on extrapolated dates with flat extrapolation setting.
         test across two front extraps, two back extraps and all permutations.
         """
         curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
@@ -236,41 +236,53 @@ class TestCurve(unittest.TestCase):
         # Middle and high date
         c3.fwd(d, dhigh1)
 
-        ### extrap method = 'extrapolate'
-        c4 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
-        # Two low dates
-        self.assertLess(c4.fwd(dlow1, dlow2), 0.053)
-        # Two high dates
-        self.assertLess(c4.fwd(dhigh1, dhigh2), 0.0465)
-        # Low and high date
-        c4.fwd(dlow1, dhigh1)
-        # Low and middle date
-        c4.fwd(dlow1, d)
-        # Middle and high date
-        c4.fwd(d, dhigh1)
+    def test_extrapolated_fwd_extrapolate(self):
+        """
+        test fwd function on extrapolated dates with extrapolation ends setting.
+        test across two front extraps, two back extraps and all permutations.
+        """
+        curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
+        dlow1 = ddh("t+1d")
+        dlow2 = ddh("t+2d")
+        d = ddh("t+1y")
+        dhigh1 = ddh("t+31y")
+        dhigh2 = ddh("t+35y")
 
-        c5 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
+        c1 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
         # Two low dates
-        c5.fwd(dlow1, dlow2), 0.053
+        self.assertLess(c1.fwd(dlow1, dlow2), 0.053)
         # Two high dates
-        c5.fwd(dhigh1, dhigh2), 0.0465
+        self.assertLess(c1.fwd(dhigh1, dhigh2), 0.0465)
         # Low and high date
-        c5.fwd(dlow1, dhigh1)
+        c1.fwd(dlow1, dhigh1)
         # Low and middle date
-        c5.fwd(dlow1, d)
+        c1.fwd(dlow1, d)
         # Middle and high date
-        c5.fwd(d, dhigh1)
-        c6 = Curve(curve_data, extrap_method="extrapolate")
+        c1.fwd(d, dhigh1)
+
+        c2 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
         # Two low dates
-        c6.fwd(dlow1, dlow2), 0.053
+        c2.fwd(dlow1, dlow2)
         # Two high dates
-        c6.fwd(dhigh1, dhigh2), 0.0465
+        c2.fwd(dhigh1, dhigh2)
         # Low and high date
-        c6.fwd(dlow1, dhigh1)
+        c2.fwd(dlow1, dhigh1)
         # Low and middle date
-        c6.fwd(dlow1, d)
+        c2.fwd(dlow1, d)
         # Middle and high date
-        c6.fwd(d, dhigh1)
+        c2.fwd(d, dhigh1)
+        
+        c3 = Curve(curve_data, extrap_method="extrapolate")
+        # Two low dates
+        c3.fwd(dlow1, dlow2)
+        # Two high dates
+        c3.fwd(dhigh1, dhigh2)
+        # Low and high date
+        c3.fwd(dlow1, dhigh1)
+        # Low and middle date
+        c3.fwd(dlow1, d)
+        # Middle and high date
+        c3.fwd(d, dhigh1)
 
 
 if __name__ == "__main__":
