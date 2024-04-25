@@ -13,7 +13,7 @@ def cap_factor(r, t, method):
     if t == 0:
         # If t == 0, there is no 'future value', just present value. This avoides division by 0 errors.
         return 1
-    
+
     if method == "EXP":
         cf = e ** (r * t)
     elif method == "YLD":
@@ -38,7 +38,7 @@ def convert_cap_factor_to_rate(cf, t, method, default=None):
     Converts cap_factor to rate. If default provided, will serve as default answer
     when t = 0 or cf = 1.
     """
-    if t == 0 or cf==1:
+    if t == 0 or cf == 1:
         return np.nan if default is None else default
     if method == "EXP":
         r = ln(cf) / t

@@ -101,8 +101,9 @@ def delta_t(date1, date2, dc, cal):
     validated_date2 = to_dateroll_date(date2, base=validated_date1)
     return (validated_date2 - validated_date1).yf(cal, dc)
 
+
 def date_within_bounds(date, lower_bound, upper_bound):
-    '''
+    """
     Returns whether given date is within bounds provided.
-    '''
+    """
     return lower_bound <= date and date <= upper_bound

@@ -1,10 +1,7 @@
-import datetime
 import unittest
 
 from dateroll import Duration, ddh
 from ratecurve import Curve
-from ratecurve import equations
-from ratecurve import utils
 
 Duration.just_bds = lambda self, *args, **kwargs: self.just_days
 Duration.yf = lambda self, *args, **kwargs: self.just_days / 365
@@ -37,35 +34,30 @@ class TestUsage(unittest.TestCase):
         date = ddh("t")
 
         # Test across different interp_ons and flat
-        c1 = Curve(curve_data, interp_on='r')
+        c1 = Curve(curve_data, interp_on="r")
         rate_1 = c1.spot(date)
-        self.assertEqual(rate_1, .053)
+        self.assertEqual(rate_1, 0.053)
 
-        c2 = Curve(curve_data, interp_on='r*t')
+        c2 = Curve(curve_data, interp_on="r*t")
         rate_2 = c2.spot(date)
-        self.assertEqual(rate_2, .053)
-
+        self.assertEqual(rate_2, 0.053)
 
         c3 = Curve(curve_data)
         rate_3 = c3.spot(date)
-        self.assertEqual(rate_3, .053)
+        self.assertEqual(rate_3, 0.053)
 
         # Test across different interp_ons and extrapolate
-        c4 = Curve(curve_data, interp_on='r', extrap_method="extrapolate")
-        rate_4 = c4.spot(date)        
-        self.assertLess(rate_4, .053)
-        c5 = Curve(curve_data, interp_on='r*t', extrap_method="extrapolate")
+        c4 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
+        rate_4 = c4.spot(date)
+        self.assertLess(rate_4, 0.053)
+        c5 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
         rate_5 = c5.spot(date)
-        self.assertLess(rate_5, .053)
+        self.assertLess(rate_5, 0.053)
         c6 = Curve(curve_data, extrap_method="extrapolate")
         rate_6 = c6.spot(date)
         # Should be less than if interpolated properly (t+4d, .053),(t+1m, .0548)
-        
-        
-        self.assertLess(rate_6, .053)
 
-
-
+        self.assertLess(rate_6, 0.053)
 
 
 if __name__ == "__main__":

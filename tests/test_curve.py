@@ -85,26 +85,26 @@ class TestCurve(unittest.TestCase):
         curve_data = {"1d": 0.053, "1m": 0.0548, "30y": 0.0465}
         # test toy
         c1 = Curve(curve_data, interp_on="r")
-        c1.spot('0d')
+        c1.spot("0d")
         self.assertAlmostEqual(c1.spot("1d"), 0.053)
         self.assertAlmostEqual(c1.spot("1m"), 0.0548)
         self.assertAlmostEqual(c1.spot("30y"), 0.0465)
 
         c2 = Curve(curve_data, interp_on="r*t")
-        c2.spot('0d')
+        c2.spot("0d")
         self.assertAlmostEqual(c2.spot("1d"), 0.053)
         self.assertAlmostEqual(c2.spot("1m"), 0.0548)
-        self.assertAlmostEqual(c2.spot("30y"), 0.0465)        
+        self.assertAlmostEqual(c2.spot("30y"), 0.0465)
         c3 = Curve(curve_data, interp_on="ln(df)")
-        c3.spot('0d')
+        c3.spot("0d")
         self.assertAlmostEqual(c3.spot("1d"), 0.053)
         self.assertAlmostEqual(c3.spot("1m"), 0.0548)
-        self.assertAlmostEqual(c3.spot("30y"), 0.0465)   
+        self.assertAlmostEqual(c3.spot("30y"), 0.0465)
         with self.assertRaises(Exception):
             c4 = Curve(curve_data, interp_on="apple")
         with self.assertRaises(Exception):
             c5 = Curve(curve_data, extrap_method="apple")
-            
+
     def test_call(self):
         """
         test callable class
@@ -158,36 +158,28 @@ class TestCurve(unittest.TestCase):
         """
         curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
         d1 = ddh("t+1d")
-        d2 = ddh("t+31y")        
-        #extrap method = 'flat'
-        c1 = Curve(
-            curve_data,
-            interp_on='r*t'
-        )
-        self.assertAlmostEqual(c1.spot(d1),.053)  # Floating point errors occur
-        self.assertAlmostEqual(c1.spot(d2),.0465)         
-        c2 = Curve(
-            curve_data
-        )
-        self.assertAlmostEqual(c2.spot(d1),.053)  
-        self.assertAlmostEqual(c2.spot(d2),.0465)
-        c3 = Curve(
-            curve_data,
-            interp_on = 'r'      
-                  )
-        self.assertAlmostEqual(c3.spot(d1),.053)  
-        self.assertAlmostEqual(c3.spot(d2),.0465)
+        d2 = ddh("t+31y")
+        # extrap method = 'flat'
+        c1 = Curve(curve_data, interp_on="r*t")
+        self.assertAlmostEqual(c1.spot(d1), 0.053)  # Floating point errors occur
+        self.assertAlmostEqual(c1.spot(d2), 0.0465)
+        c2 = Curve(curve_data)
+        self.assertAlmostEqual(c2.spot(d1), 0.053)
+        self.assertAlmostEqual(c2.spot(d2), 0.0465)
+        c3 = Curve(curve_data, interp_on="r")
+        self.assertAlmostEqual(c3.spot(d1), 0.053)
+        self.assertAlmostEqual(c3.spot(d2), 0.0465)
 
         # extrap method = 'extrapolate'
-        c4 = Curve(curve_data, interp_on = 'r', extrap_method='extrapolate')
-        self.assertLess(c4.spot(d1),.053)
-        self.assertLess(c4.spot(d2),.0465)        
-        c5 = Curve(curve_data, interp_on = 'r*t', extrap_method='extrapolate')
-        self.assertLess(c5.spot(d1),.053)
-        self.assertLess(c5.spot(d2),.0465)        
-        c6 = Curve(curve_data, extrap_method='extrapolate')
-        self.assertLess(c6.spot(d1),.053)
-        self.assertLess(c6.spot(d2),.0465)
+        c4 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
+        self.assertLess(c4.spot(d1), 0.053)
+        self.assertLess(c4.spot(d2), 0.0465)
+        c5 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
+        self.assertLess(c5.spot(d1), 0.053)
+        self.assertLess(c5.spot(d2), 0.0465)
+        c6 = Curve(curve_data, extrap_method="extrapolate")
+        self.assertLess(c6.spot(d1), 0.053)
+        self.assertLess(c6.spot(d2), 0.0465)
 
     def test_extrapolated_fwd(self):
         """
@@ -197,95 +189,81 @@ class TestCurve(unittest.TestCase):
         curve_data = {"5d": 0.053, "1m": 0.0548, "30y": 0.0465}
         dlow1 = ddh("t+1d")
         dlow2 = ddh("t+2d")
-        d = ddh('t+1y')
+        d = ddh("t+1y")
         dhigh1 = ddh("t+31y")
-        dhigh2 = ddh("t+35y")        
+        dhigh2 = ddh("t+35y")
         ###extrap method = 'flat'
-        c1 = Curve(
-            curve_data,
-            interp_on='r*t'
-        )
+        c1 = Curve(curve_data, interp_on="r*t")
         # Two low dates
-        self.assertAlmostEqual(c1.fwd(dlow1, dlow2),.053)
+        self.assertAlmostEqual(c1.fwd(dlow1, dlow2), 0.053)
         # Two high dates
-        self.assertAlmostEqual(c1.fwd(dhigh1, dhigh2),.0465) 
+        self.assertAlmostEqual(c1.fwd(dhigh1, dhigh2), 0.0465)
         # Low and high date
         c1.fwd(dlow1, dhigh1)
         # Low and middle date
         c1.fwd(dlow1, d)
-        # Middle and high date        
+        # Middle and high date
         c1.fwd(d, dhigh1)
 
-        c2 = Curve(
-            curve_data
-        )
+        c2 = Curve(curve_data)
         # Two low dates
-        self.assertAlmostEqual(c2.fwd(dlow1, dlow2),.053)
+        self.assertAlmostEqual(c2.fwd(dlow1, dlow2), 0.053)
         # Two high dates
-        self.assertAlmostEqual(c2.fwd(dhigh1, dhigh2),.0465) 
+        self.assertAlmostEqual(c2.fwd(dhigh1, dhigh2), 0.0465)
         # Low and high date
         c2.fwd(dlow1, dhigh1)
         # Low and middle date
         c2.fwd(dlow1, d)
-        # Middle and high date        
+        # Middle and high date
         c2.fwd(d, dhigh1)
 
-        c3 = Curve(
-            curve_data,
-            interp_on = 'r'      
-                  )
+        c3 = Curve(curve_data, interp_on="r")
         # Two low dates
-        self.assertAlmostEqual(c3.fwd(dlow1, dlow2),.053)
+        self.assertAlmostEqual(c3.fwd(dlow1, dlow2), 0.053)
         # Two high dates
-        self.assertAlmostEqual(c3.fwd(dhigh1, dhigh2),.0465) 
+        self.assertAlmostEqual(c3.fwd(dhigh1, dhigh2), 0.0465)
         # Low and high date
         c3.fwd(dlow1, dhigh1)
         # Low and middle date
         c3.fwd(dlow1, d)
-        # Middle and high date        
+        # Middle and high date
         c3.fwd(d, dhigh1)
 
         ### extrap method = 'extrapolate'
-        c4 = Curve(curve_data, interp_on = 'r', extrap_method='extrapolate')
+        c4 = Curve(curve_data, interp_on="r", extrap_method="extrapolate")
         # Two low dates
-        self.assertLess(c4.fwd(dlow1, dlow2),.053)
+        self.assertLess(c4.fwd(dlow1, dlow2), 0.053)
         # Two high dates
-        self.assertLess(c4.fwd(dhigh1, dhigh2),.0465) 
+        self.assertLess(c4.fwd(dhigh1, dhigh2), 0.0465)
         # Low and high date
         c4.fwd(dlow1, dhigh1)
         # Low and middle date
         c4.fwd(dlow1, d)
-        # Middle and high date        
+        # Middle and high date
         c4.fwd(d, dhigh1)
 
-        c5 = Curve(curve_data, interp_on = 'r*t', extrap_method='extrapolate')
+        c5 = Curve(curve_data, interp_on="r*t", extrap_method="extrapolate")
         # Two low dates
-        c5.fwd(dlow1, dlow2),.053
+        c5.fwd(dlow1, dlow2), 0.053
         # Two high dates
-        c5.fwd(dhigh1, dhigh2),.0465
+        c5.fwd(dhigh1, dhigh2), 0.0465
         # Low and high date
         c5.fwd(dlow1, dhigh1)
         # Low and middle date
         c5.fwd(dlow1, d)
-        # Middle and high date        
-        c5.fwd(d, dhigh1)   
-        c6 = Curve(curve_data, extrap_method='extrapolate')
+        # Middle and high date
+        c5.fwd(d, dhigh1)
+        c6 = Curve(curve_data, extrap_method="extrapolate")
         # Two low dates
-        c6.fwd(dlow1, dlow2),.053
+        c6.fwd(dlow1, dlow2), 0.053
         # Two high dates
-        c6.fwd(dhigh1, dhigh2),.0465
+        c6.fwd(dhigh1, dhigh2), 0.0465
         # Low and high date
         c6.fwd(dlow1, dhigh1)
         # Low and middle date
         c6.fwd(dlow1, d)
-        # Middle and high date        
-        c6.fwd(d, dhigh1)  
-
-   
-
-
-
-
+        # Middle and high date
+        c6.fwd(d, dhigh1)
 
 
 if __name__ == "__main__":
